@@ -3,6 +3,8 @@ from streamlit_lottie import st_lottie
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from pathlib import Path
+
 import seaborn as sns
 import requests
 
@@ -52,7 +54,8 @@ with mid:
     )
 
 
-data_path = "/home/drew/DataScience/projects/streamlit/classification_intuition/dataset/heart_disease_health_indicators_BRFSS2015.csv"
+data_path = Path(__file__).parents[1] / 'classification_intuition/dataset/heart_disease_health_indicators_BRFSS2015.csv'
+# data_path = "/home/drew/DataScience/projects/streamlit/classification_intuition/dataset/heart_disease_health_indicators_BRFSS2015.csv"
 
 
 @st.cache
