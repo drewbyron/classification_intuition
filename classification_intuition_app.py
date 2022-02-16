@@ -46,7 +46,7 @@ with mid:
     )
 
 
-data_path = "/home/drew/DataScience/projects/streamlit/heart_disease/dataset/heart_disease_health_indicators_BRFSS2015.csv"
+data_path = "/home/drew/DataScience/projects/streamlit/classification_intuition/dataset/heart_disease_health_indicators_BRFSS2015.csv"
 
 
 @st.cache
