@@ -288,13 +288,13 @@ with left_col:
     fig_roc, ax_roc = plt.subplots(figsize=(10, 8))
     # plot the roc curve for the model
     plt.plot(fpr_now, tpr_now, 'rp', markersize=15, label = "chosen threshold")
-    plt.plot(ns_fpr, ns_tpr, linestyle="--", label="no skill. AUC = {}".format(ns_auc))
+    plt.plot(ns_fpr, ns_tpr, linestyle="--", label="no skill. AUC = {}".format(ns_auc), linewidth=2.5)
     plt.plot(
         lr_fpr,
         lr_tpr,
         marker=".",
         label="LogReg. AUC = {}".format(np.around(lr_auc, 2)),
-    )
+        linewidth=2.5)
     # axis labels
     plt.xlabel("false positive rate")
     plt.ylabel("true positive rate")
@@ -324,11 +324,11 @@ with right_col:
     # Decision Threshold Plot.
     fig_dt, ax_dt = plt.subplots(figsize=(10, 8))
 
-    ax_dt.plot(thresholds, accuracy, label="accuracy")
-    ax_dt.plot(thresholds, precision, label="precision")
-    ax_dt.plot(thresholds, recall, label="recall")
-    ax_dt.plot(thresholds, fscore, label="fscore")
-    ax_dt.axvline(x=threshold, color="b", label="DT implimented")
+    ax_dt.plot(thresholds, accuracy, label="accuracy", linewidth=2.5)
+    ax_dt.plot(thresholds, precision, label="precision", linewidth=2.5)
+    ax_dt.plot(thresholds, recall, label="recall", linewidth=2.5)
+    ax_dt.plot(thresholds, fscore, label="fscore", linewidth=2.5)
+    ax_dt.axvline(x=threshold, color="b", label="DT chosen")
     ax_dt.legend(loc="upper left")
     ax_dt.set_xlabel("decision threshold")
     ax_dt.set_ylabel("score")
@@ -344,9 +344,9 @@ with right_col:
         return dftemp[top_cols]
 
     col_num = st.slider("Number of most influential features to show: ", 1, 10, value=5)
-    sns.lineplot(data=top_cols(regularization_path, col_num))
+    sns.lineplot(data=top_cols(regularization_path, col_num), linewidth=2.5)
     plt.xscale("log")
-    plt.axvline(x=lam_final, color="b", label="lambda implimented")
+    plt.axvline(x=lam_final, color="b", label="lambda chosen")
     ax_rp.set_xlabel("lambda")
     ax_rp.set_ylabel("feature weight")
     ax_rp.legend()
