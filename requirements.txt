@@ -1,0 +1,12 @@
+
+matplotlib
+numpy
+pandas
+scipy
+seaborn
+scikit-learn
+collections
+imblearn
+streamlit
+requests
+streamlit_lottie
