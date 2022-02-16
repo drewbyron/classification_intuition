@@ -439,4 +439,6 @@ st.subheader("References and Further Reading:")
 * Add in a model report section with accuracy, precision, and stuff. 
 maybe make a table. 
 * Also add in references and further reading.
+* Get markdown badge for github page. 
+* Make code more organized and readable. 
  """
