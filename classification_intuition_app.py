@@ -398,7 +398,7 @@ _left, _left, mid, _right, _right = st.columns(5)
 with mid:
     st_lottie(
         def_gif,
-        speed=0.3,
+        speed=0.6,
         reverse=False,
         loop=True,
         quality="low",  # medium ; high
@@ -418,7 +418,7 @@ with left:
     """
     ### Simple Metrics
 
-    __True Positives/Negatives (TP/PN)__: Number of times the model correctly predicts the positive/negative class. _See Confusion Matix._
+    __True Positives/Negatives (TP/TN)__: Number of times the model correctly predicts the positive/negative class. _See Confusion Matix._
 
     __False Positives/Negatives (FP/FN)__: Number of times the model incorrectly predicts the positive/negative class. _See Confusion Matix._
     """
