@@ -263,7 +263,7 @@ lam = 20000  # This forces all weights to zero.
 
 while condition:
     lam_list.append(lam)
-    lam = lam / 5
+    lam = lam / 2
     condition = lam > 1
 
 
