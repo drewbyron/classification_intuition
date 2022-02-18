@@ -1,14 +1,16 @@
-import streamlit as st
-from streamlit_lottie import st_lottie
+# An interactive app for learning and building intuition for classification tasks in machine learning.
+# Author: Drew Byron. william.andrew.byron@gmail.com
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from pathlib import Path
-
 import seaborn as sns
+import streamlit as st
+from streamlit_lottie import st_lottie
 import requests
 
-# ML
+# ML libraries
 from collections import Counter
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
@@ -23,11 +25,11 @@ from sklearn.metrics import roc_auc_score
 from sklearn.metrics import balanced_accuracy_score
 from sklearn.metrics import accuracy_score
 
-# Settings
+# Settings.
 plt.style.use("seaborn")
 sns.set_context("paper", font_scale=2.5)
 
-
+# Load lottie gifs.
 def load_lottieurl(url: str):
     r = requests.get(url)
     if r.status_code != 200:
@@ -35,11 +37,9 @@ def load_lottieurl(url: str):
     return r.json()
 
 
-# lottie_coding = load_lottiefile("lottiefile.json")  # replace link to local lottie file
 ml_gif = load_lottieurl(
     "https://assets9.lottiefiles.com/private_files/lf30_8npirptd.json"
 )
-
 
 _left, _left, mid, _right, _right = st.columns(5)
 with mid:
@@ -55,9 +55,10 @@ with mid:
         key=None,
     )
 
-
-data_path = Path(__file__).parents[1] / 'classification_intuition/dataset/heart_disease_health_indicators_BRFSS2015.csv'
-# data_path = "/home/drew/DataScience/projects/streamlit/classification_intuition/dataset/heart_disease_health_indicators_BRFSS2015.csv"
+data_path = (
+    Path(__file__).parents[1]
+    / "classification_intuition/dataset/heart_disease_health_indicators_BRFSS2015.csv"
+)
 
 
 @st.cache
@@ -81,6 +82,8 @@ by the CDC. The cleaned dataset and details on all features can be found
 creating a machine learning model for suggesting whether or not one should be screened for heart disease based 
 on lifestyle and health metrics. """
 """* * *"""
+
+# Begin with an exploratory analysis.
 st.subheader("Use the sidebar to select model hyperparameters.")
 
 data_load_state = st.text("Loading data...")
@@ -108,11 +111,13 @@ if st.checkbox("Show correlation matrix."):
 
     st.write(data.describe())
 
-# Begin by isolating the target variable.
+# Isolating the target variable.
 all_X = data.drop(["HeartDiseaseorAttack", "GenHlth"], axis=1)
 all_y = data["HeartDiseaseorAttack"]
 
+# ----- Sidebar ------
 
+# Build out the hyperparameter selection in the sidebar.
 st.sidebar.title("Specify Hyperparameters")
 st.sidebar.write("We will use regularized logistic regression.")
 
@@ -132,12 +137,13 @@ if st.sidebar.checkbox(
 
 X_train, X_test, y_train, y_test = train_test_split(all_X, all_y)
 
-# perform a robust scaler transform of the dataset
+# Standardize the features.
 scaler = StandardScaler()
 
 X_train_np = scaler.fit_transform(X_train.to_numpy())
 X_train = pd.DataFrame(X_train_np, columns=all_X.columns)
 
+# Be careful not to use the test set for training of any kind. Even the stanardization.
 X_test_np = scaler.transform(X_test.to_numpy())
 X_test = pd.DataFrame(X_test_np, columns=all_X.columns)
 
@@ -164,10 +170,6 @@ st.sidebar.write(
     )
 )
 
-
-# """Remember that the goal is to decide if someone should be screened for heart
-# disease or not. Not to maximize the f1 score of the model.... Explain here. """
-
 st.sidebar.subheader("Choose a type of regularization.")
 regularization_type = st.sidebar.radio("Regularization type", ("l1", "l2"))
 st.sidebar.subheader("Select the amount of regularization.")
@@ -177,33 +179,37 @@ lam_final = st.sidebar.slider("lambda: ", 0.001, float(20000), value=1000.0)
 st.sidebar.subheader("Select a decision threshold.")
 threshold = st.sidebar.slider("decision threshold: ", 0.01, 1.0, value=0.5)
 
-### Fit the model and create plots to assess performance.
+# ----- Model Report ------
 
-# Show the performance of the model:
+# Assess the performance of the model.
 lr = LogisticRegression(
     C=1 / lam_final, solver="liblinear", penalty=regularization_type
 )
 
-# Apply threshold to probabilities to create labels
+# Apply decision threshold to probabilities to create labels
 def to_labels(pos_probs, threshold):
     return (pos_probs >= threshold).astype("int")
 
 
-# fit the model to the oversampled data.
+# Fit the model to the oversampled data.
 lr.fit(X_over, y_over)
-# predict probabilities
+
+# Predict probabilities based on test set. Note that this is not yet a classification.
 yhat = lr.predict_proba(X_test)
 
-# keep probabilities for the positive outcome only
+# Keep probabilities for the positive outcome.
 probs = yhat[:, 1]
-# define thresholds
+
+# Create arrays for Decision Threshold Plot.
 thresholds = np.arange(0.01, 1, 0.02)
 thresholds = np.append(thresholds, [threshold])
 thresholds.sort()
-# evaluate each threshold
 
+# Evaluate metrics at each threshold.
 accuracy = [accuracy_score(y_test, to_labels(probs, t)) for t in thresholds]
-bal_accuracy = [balanced_accuracy_score(y_test, to_labels(probs, t)) for t in thresholds]
+bal_accuracy = [
+    balanced_accuracy_score(y_test, to_labels(probs, t)) for t in thresholds
+]
 
 precision = [
     precision_recall_fscore_support(
@@ -224,42 +230,55 @@ fscore = [
     for t in thresholds
 ]
 
-# Find AUC and ROC curves
+# Find AUC and ROC curves.
 ns_probs = np.zeros(len(y_test))
-# calculate scores
+
 ns_auc = roc_auc_score(y_test, ns_probs)
 lr_auc = roc_auc_score(y_test, probs)
 
-# calculate roc curves
 ns_fpr, ns_tpr, _ = roc_curve(y_test, ns_probs)
 lr_fpr, lr_tpr, _ = roc_curve(y_test, probs)
 
 # Get attributes of confusion matrix.
 y_predicted = to_labels(probs, threshold)
-tn, fp, fn, tp = confusion_matrix(y_test, y_predicted, normalize = 'true').ravel()
+tn, fp, fn, tp = confusion_matrix(y_test, y_predicted, normalize="true").ravel()
 
-# Summarize the performance of the specific threshold and lambda chosen. 
-accuracy_now = accuracy_score(y_test, y_predicted, normalize = 'true')
-bal_accuracy_now= balanced_accuracy_score(y_test, y_predicted)
-# balanced_accuracy = (tp+tn) / (tn + fp + fn + tp)
+# Summarize the performance of the specific threshold and lambda chosen.
+accuracy_now = accuracy_score(y_test, y_predicted, normalize="true")
+bal_accuracy_now = balanced_accuracy_score(y_test, y_predicted)
 
+# The "now" suffix indicates the paramters for the specific theshold chosen in the app.
 tpr_now = tp / (tp + fn)
 fpr_now = fp / (fp + tn)
 
-# balanced_accuracy = (tpr_now+ (1.0- fpr_now))/2
-# bal_acc=balanced_accuracy_score(y_test,y_predicted) # Somehow the same... 
-precision_now,recall_now,fscore_now, _ = precision_recall_fscore_support(
-        y_test, y_predicted, average="binary", zero_division=0
-    )
+precision_now, recall_now, fscore_now, _ = precision_recall_fscore_support(
+    y_test, y_predicted, average="binary", zero_division=0
+)
 
-performance_now_np = np.around(np.array([accuracy_now, bal_accuracy_now, precision_now, recall_now, fpr_now,fscore_now]),3)
-performance_now = pd.DataFrame(columns=["accuracy", "balanced accuracy", "precision", "recall/tpr", "fpr","fscore"])
+performance_now_np = np.around(
+    np.array(
+        [accuracy_now, bal_accuracy_now, precision_now, recall_now, fpr_now, fscore_now]
+    ),
+    3,
+)
+performance_now = pd.DataFrame(
+    columns=[
+        "accuracy",
+        "balanced accuracy",
+        "precision",
+        "recall/tpr",
+        "fpr",
+        "fscore",
+    ]
+)
 performance_now.loc[0] = performance_now_np
 
+
+# Create a Regularization Path plot for the model. 
 lam_list = []
 lam_list.append(lam_final)  # Add the specific lambda chosen in the app.
 condition = True
-lam = 20000  # This forces all weights to zero.
+lam = 20000  # This forces all weights to zero for l1 regularization. 
 
 while condition:
     lam_list.append(lam)
@@ -283,6 +302,8 @@ for lam in lam_list:
 regularization_path["lambda"] = lam_list
 regularization_path = regularization_path.set_index("lambda", drop=True)
 
+# Now that we have collected all the model metrics, present plots.
+
 """
 ***
 ## Model Report
@@ -292,17 +313,22 @@ with left_col:
 
     # ROC AUC Plot
     st.subheader("ROC AUC Plot")
-
     fig_roc, ax_roc = plt.subplots(figsize=(10, 8))
-    # plot the roc curve for the model
-    plt.plot(fpr_now, tpr_now, 'rp', markersize=15, label = "chosen threshold")
-    plt.plot(ns_fpr, ns_tpr, linestyle="--", label="no skill. AUC = {}".format(ns_auc), linewidth=2.5)
+    plt.plot(fpr_now, tpr_now, "rp", markersize=15, label="chosen threshold")
+    plt.plot(
+        ns_fpr,
+        ns_tpr,
+        linestyle="--",
+        label="no skill. AUC = {}".format(ns_auc),
+        linewidth=2.5,
+    )
     plt.plot(
         lr_fpr,
         lr_tpr,
         marker=".",
         label="LogReg. AUC = {}".format(np.around(lr_auc, 2)),
-        linewidth=2.5)
+        linewidth=2.5,
+    )
     # axis labels
     plt.xlabel("false positive rate")
     plt.ylabel("true positive rate")
@@ -318,7 +344,6 @@ with left_col:
     else:
         norm = None
 
-    # Confusion Matrix plot.
     cm = confusion_matrix(y_test, to_labels(probs, threshold), normalize=norm)
     fig_cm, ax_cm = plt.subplots(figsize=(10, 8))
     sns.heatmap(cm, annot=True, annot_kws={"size": 16})  # font size
@@ -328,21 +353,21 @@ with left_col:
 
 with right_col:
 
-    st.subheader("Decision Threshold Plot")
     # Decision Threshold Plot.
+    st.subheader("Decision Threshold Plot")
     fig_dt, ax_dt = plt.subplots(figsize=(10, 8))
-
     ax_dt.plot(thresholds, accuracy, label="accuracy", linewidth=2.5)
     ax_dt.plot(thresholds, bal_accuracy, label="balanced accuracy", linewidth=2.5)
     ax_dt.plot(thresholds, precision, label="precision", linewidth=2.5)
     ax_dt.plot(thresholds, recall, label="recall", linewidth=2.5)
     ax_dt.plot(thresholds, fscore, label="fscore", linewidth=2.5)
     ax_dt.axvline(x=threshold, color="b", label="chosen threshold")
-    ax_dt.legend(loc="lower right",prop={'size': 19})
+    ax_dt.legend(loc="lower right", prop={"size": 19})
     ax_dt.set_xlabel("decision threshold")
     ax_dt.set_ylabel("score")
     st.pyplot(fig_dt)
 
+    # Regularization Paths Plot.
     st.subheader("Regularization Paths Plot")
     fig_rp, ax_rp = plt.subplots(figsize=(10, 6))
 
@@ -361,11 +386,12 @@ with right_col:
     ax_rp.legend()
     st.pyplot(fig_rp)
 
+# Summarize the metrics for the specific model chosen.
 """
 ### Model Summary
 """
 
-# CSS to inject contained in a string
+# This is used to hide the df index column.
 hide_table_row_index = """
             <style>
             tbody th {display:none}
@@ -376,7 +402,8 @@ hide_table_row_index = """
 # Inject CSS with Markdown
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
 st.table(performance_now)
-# Number of non-zero weights:
+
+# Number of non-zero weights.
 nonzero_weights = np.count_nonzero(regularization_path.loc[lam_final])
 st.write("Number of non-zero feature weights: {}".format(nonzero_weights))
 
@@ -384,15 +411,9 @@ if st.checkbox("Show feature weights."):
     st.subheader("Feature weights for chosen lambda ({})".format(lam_final))
     st.write(regularization_path.loc[lam_final])
 
-
 """***"""
 
-
-# lottie_coding = load_lottiefile("lottiefile.json")  # replace link to local lottie file
-def_gif = load_lottieurl(
-    "https://assets10.lottiefiles.com/packages/lf20_yAh844.json"
-)
-
+def_gif = load_lottieurl("https://assets10.lottiefiles.com/packages/lf20_yAh844.json")
 
 _left, _left, mid, _right, _right = st.columns(5)
 with mid:
@@ -407,7 +428,7 @@ with mid:
         key=None,
     )
 
-
+# ----- Definitions ------
 
 """
 ## Definitions
@@ -425,25 +446,25 @@ with left:
     """
     __True Positive Rate (TPR)__: _See ROC plot._
     """
-    st.latex(r''' TPR = \frac{TP}{P} = \frac{TP}{TP + FN}  ''')
+    st.latex(r""" TPR = \frac{TP}{P} = \frac{TP}{TP + FN}  """)
     """
     __False Positive Rate (FPR)__: _See ROC plot._
     """
-    st.latex(r''' FPR = \frac{FP}{N} = \frac{FP}{FP + TN}  ''')
+    st.latex(r""" FPR = \frac{FP}{N} = \frac{FP}{FP + TN}  """)
 
     """
     __Precision__: Probability a positive prediction was correct. _See Decision Threshold Plot._
     """
-    st.latex(r''' Precision = \frac{TP }{TP + FP} ''')
+    st.latex(r""" Precision = \frac{TP }{TP + FP} """)
 
     """
     __Recall__: Probability an actual positive was correctly identified. Identical to TPR. _See Decision Threshold Plot._
     """
-    st.latex(r''' Recall = \frac{TP }{TP + FN} ''')
+    st.latex(r""" Recall = \frac{TP }{TP + FN} """)
 
 with right:
 
-    """ 
+    """
     ### Advanced Metrics
     """
     """
@@ -451,21 +472,21 @@ with right:
     Consider how poor a metric this can be for imbalanced datasets. A model that predicts that no one has heart disease \
     will have an accuracy of ~.9 in our dataset because most people in the set don't have heart disease. _See Decision Threshold Plot._
     """
-    st.latex(r''' Accuracy = \frac{TP+TN}{TP+TN +FP +FN} ''')
+    st.latex(r""" Accuracy = \frac{TP+TN}{TP+TN +FP +FN} """)
 
     """
     __Balanced Accuracy__: Accuracy you would obtain if you had a balanced data set (normalized to size of P/N classes). This is generally a better metric for \
     assessing imbalanced datasets. A model that predicts that no one (or everyone) has heart disease \
     will have a score of .5 for balanced accuracy. _See Decision Threshold Plot._
     """
-    st.latex(r''' Balanced \,\, Accuracy = \frac{TPR - FPR + 1}{2} ''')
+    st.latex(r""" Balanced \,\, Accuracy = \frac{TPR - FPR + 1}{2} """)
 
     """
     __Fscore__: The harmonic mean of the precision and recall. Technically this is the F1-score. For many \
     classification tasks mazimizing the [fscore](https://machinelearningmastery.com/fbeta-measure-for-machine-learning/) \
     is sensible because it indicates both good precision and good recall. _See Decision Threshold Plot._
     """
-    st.latex(r''' Fscore = 2 \frac{Precision * Recall }{Precision + Recall} ''')
+    st.latex(r""" Fscore = 2 \frac{Precision * Recall }{Precision + Recall} """)
 
 # lottie_coding = load_lottiefile("lottiefile.json")  # replace link to local lottie file
 consider_gif = load_lottieurl(
@@ -485,6 +506,8 @@ with mid:
         width=None,
         key=None,
     )
+
+# -----Things to Consider ------
 
 """
 ## Things to Consider
@@ -515,4 +538,3 @@ problem as you read more. I personally find that unless I am working with a conc
 * [Metrics for imbalanced data sets.](https://towardsdatascience.com/what-metrics-should-we-use-on-imbalanced-data-set-precision-recall-roc-e2e79252aeba#:~:text=Recall%20and%20True%20Positive%20Rate,denominator%20contains%20the%20true%20negatives.)
 * [Scikit-learn docs.](https://scikit-learn.org/stable/user_guide.html)
 """
-
