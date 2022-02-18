@@ -172,7 +172,7 @@ st.sidebar.subheader("Choose a type of regularization.")
 regularization_type = st.sidebar.radio("Regularization type", ("l1", "l2"))
 st.sidebar.subheader("Select the amount of regularization.")
 
-lam_final = st.sidebar.slider("lambda: ", 0.001, float(5000), value=100.0)
+lam_final = st.sidebar.slider("lambda: ", 0.001, float(10000), value=1000.0)
 
 st.sidebar.subheader("Select a decision threshold.")
 threshold = st.sidebar.slider("decision threshold: ", 0.01, 1.0, value=0.5)
@@ -259,7 +259,7 @@ performance_now.loc[0] = performance_now_np
 lam_list = []
 lam_list.append(lam_final)  # Add the specific lambda chosen in the app.
 condition = True
-lam = 5000  # This forces all weights to zero.
+lam = 10000  # This forces all weights to zero.
 
 while condition:
     lam_list.append(lam)
