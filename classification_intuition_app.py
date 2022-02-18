@@ -84,7 +84,7 @@ on lifestyle and health metrics. """
 st.subheader("Use the sidebar to select model hyperparameters.")
 
 data_load_state = st.text("Loading data...")
-data = load_data(200000)
+data = load_data(100000)
 data_load_state.text("Data has loaded.")
 
 if st.checkbox("Show raw data."):
