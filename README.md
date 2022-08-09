@@ -3,7 +3,7 @@
 
 An interactive app for learning and building intuition for classification tasks in machine learning. 
 
-__Author__: Drew Byron. [email.](william.andrew.byron@gmail.com) [github.](http://github.com/drewbyron) [linkedin.](http://linkedin.com/in/drew-byron/) 
+__Author__: Drew Byron. william.andrew.byron@gmail.com. [github.](http://github.com/drewbyron) [linkedin.](http://linkedin.com/in/drew-byron/) 
 
 __Goal__:  You work for the CDC and you are tasked with creating a model that suggests whether or not one should be screened for heart disease. 
 
